@@ -74,3 +74,64 @@ curl -X POST http://localhost:3000/user/register \
 
 ---
 
+# User Login — `POST /user/login`
+
+## Description
+Authenticates an existing user. Validates credentials and returns a JWT plus the user object (password excluded).
+
+## Endpoint
+- URL: `/user/login`
+- Method: `POST`
+- Content-Type: `application/json`
+
+## Request body
+JSON object with the following structure:
+
+{
+  "email": "string",      // required, must be a valid email
+  "password": "string"    // required, min length 6
+}
+
+Validation rules
+- `email`: required, must be a valid email
+- `password`: required, minimum 6 characters
+
+## Success response
+- Status: `200 OK`
+- Body: `{ token, user }`
+  - `token`: JWT string
+  - `user`: user document (password excluded)
+
+Example success response
+
+{
+  "token": "<jwt-token>",
+  "user": {
+    "_id": "632...",
+    "fullname": { "firstname": "Disha", "lastname": "Patel" },
+    "email": "disha@example.com",
+    "socketId": null,
+    "__v": 0
+  }
+}
+
+## Error responses
+- `400 Bad Request` — validation failed (returns `{ errors: [...] }`)
+- `401 Unauthorized` — invalid credentials
+  - Body: `{ message: "Invalid email or password" }`
+- `500 Internal Server Error` — unexpected server error
+
+Example invalid-credentials response
+
+{
+  "message": "Invalid email or password"
+}
+
+## Example curl
+
+curl -X POST http://localhost:3000/user/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"disha@example.com", "password":"s3cret"}'
+
+---
+
