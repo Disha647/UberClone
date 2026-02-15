@@ -135,3 +135,89 @@ curl -X POST http://localhost:3000/user/login \
 
 ---
 
+# User Profile — `GET /users/profile`
+
+## Description
+Returns the authenticated user's profile. The endpoint is protected — a valid JWT must be supplied (cookie or Authorization header). The response contains the user document with the password excluded.
+
+---
+
+## Endpoint
+- URL: `/users/profile`
+- Method: `GET`
+- Authentication: Required (JWT)
+
+## Authentication
+Provide the JWT either as:
+- `Authorization: Bearer <token>` header
+- or a cookie named `token`
+
+## Success response
+- Status: `200 OK`
+- Body: the authenticated `user` object (password is not returned)
+
+Example success response
+
+{
+  "_id": "632...",
+  "fullname": { "firstname": "Disha", "lastname": "Patel" },
+  "email": "disha@example.com",
+  "socketId": null,
+  "__v": 0
+}
+
+## Error responses
+- `401 Unauthorized` — missing/invalid/blacklisted token
+  - Body: `{ message: "Unauthorized" }`
+- `500 Internal Server Error` — unexpected server error
+
+## Example curl (Authorization header)
+
+curl -X GET http://localhost:3000/users/profile \
+  -H "Authorization: Bearer <jwt-token>"
+
+## Example curl (cookie)
+
+curl -X GET http://localhost:3000/users/profile \
+  --cookie "token=<jwt-token>"
+
+---
+
+# User Logout — `GET /users/logout`
+
+## Description
+Logs out the authenticated user by clearing the `token` cookie and adding the token to a server-side blacklist (prevents reuse until the token expires).
+
+---
+
+## Endpoint
+- URL: `/users/logout`
+- Method: `GET`
+- Authentication: Required (JWT)
+
+## Behavior
+- Clears the `token` cookie on the client (`res.clearCookie('token')`).
+- Stores the token in the `BlacklistToken` collection (expires after 24 hours).
+- Returns a confirmation message.
+
+## Success response
+- Status: `200 OK`
+- Body: `{ "message": "Logged out" }`
+
+## Error responses
+- `401 Unauthorized` — missing/invalid/blacklisted token
+  - Body: `{ message: "Unauthorized" }`
+- `500 Internal Server Error` — unexpected server error
+
+## Example curl (Authorization header)
+
+curl -X GET http://localhost:3000/users/logout \
+  -H "Authorization: Bearer <jwt-token>"
+
+## Example curl (cookie)
+
+curl -X GET http://localhost:3000/users/logout \
+  --cookie "token=<jwt-token>"
+
+---
+
