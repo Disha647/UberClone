@@ -221,21 +221,17 @@ curl -X GET http://localhost:3000/users/logout \
 
 ---
 
-# Captain Registration — `POST /captains/register`
+# Captains — `/captains`
 
-## Description
-Registers a new captain (driver). Validates input, hashes the password, creates the captain record, and returns a JWT plus the created captain (password is not returned).
+This section documents all public captain endpoints: register, login, profile and logout. Request body and response examples are shown as JSON with inline comments describing validation rules.
 
 ---
 
-## Endpoint
-- URL: `/captains/register`
-- Method: `POST`
-- Content-Type: `application/json`
+## POST /captains/register
+Register a new captain.
 
-## Request body
-JSON object with the following structure:
-
+Request body (JSON with comments):
+```json
 {
   "fullname": {
     "firstname": "string",    // required, min length 3
@@ -246,28 +242,14 @@ JSON object with the following structure:
   "vehicle": {
     "color": "string",       // required, min length 3
     "plate": "string",       // required, min length 3
-    "capacity": number,        // required, min 1
-    "vehicleType": "string"  // required, one of: car, motorcycle, auto
+    "capacity": 4,             // required, integer, min 1
+    "vehicleType": "car"     // required, one of: car, motorcycle, auto
   }
 }
+```
 
-### Validation rules
-- `email`: required, valid email
-- `fullname.firstname`: required, minimum 3 characters
-- `password`: required, minimum 6 characters
-- `vehicle.color`: required, minimum 3 characters
-- `vehicle.plate`: required, minimum 3 characters
-- `vehicle.capacity`: integer, minimum 1
-- `vehicle.vehicleType`: one of `car`, `motorcycle`, `auto`
-
-## Success response
-- Status: `201 Created`
-- Body: `{ token, captain }`
-  - `token`: JWT string (signed with `process.env.JWT_SECRET`)
-  - `captain`: created captain document (password excluded)
-
-Example success response
-
+Success response (201):
+```json
 {
   "token": "<jwt-token>",
   "captain": {
@@ -275,28 +257,55 @@ Example success response
     "fullname": { "firstname": "John", "lastname": "Doe" },
     "email": "john@example.com",
     "status": "inactive",
-    "vehicle": { "color": "white", "plate": "AB1234", "capacity": 4, "vehicleType": "car" },
-    "location": { "ltd": null, "lng": null },
-    "socketId": null
+    "vehicle": { "color": "white", "plate": "AB1234", "capacity": 4, "vehicleType": "car" }
+    // password is excluded
   }
 }
-
-## Error responses
-- `400 Bad Request` — validation failed (returns `{ errors: [...] }` from `express-validator`)
-- `400 Bad Request` — duplicate email (`{ "message": "Captain already exist" }`)
-- `500 Internal Server Error` — unexpected server error
-
-## Example curl
-
-curl -X POST http://localhost:3000/captains/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fullname": { "firstname": "Jane", "lastname": "Roe" },
-    "email": "jane@example.com",
-    "password": "password123",
-    "vehicle": { "color": "red", "plate": "XYZ-100", "capacity": 4, "vehicleType": "car" }
-  }'
-
+```
 
 ---
+
+## POST /captains/login
+Authenticate captain and receive a JWT (also sets `token` cookie).
+
+Request body:
+```json
+{
+  "email": "string",      // required, valid email
+  "password": "string"    // required, min length 6
+}
+```
+
+Success response (200):
+```json
+{
+  "token": "<jwt-token>",
+  "captain": { /* captain object, password excluded */ }
+}
+```
+
+---
+
+## GET /captains/profile
+Return authenticated captain profile. Requires JWT (cookie or Authorization header).
+
+Success response (200):
+```json
+{
+  "captain": { /* captain object, password excluded */ }
+}
+```
+
+---
+
+## GET /captains/logout
+Invalidate the current JWT and clear the cookie.
+
+Success response (200):
+```json
+{ "message": "Logout successfully" }
+```
+
+---
+
 
